@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>BiniFn Arcade — Full Single File</title>
+<meta name="description" content="BiniFn Arcade: multi-game portal — Clicker, CPS, Typing, Memory, Reaction, Color Match + sounds, animations, mobile-friendly & saves." />
+<style>
+  :root{
+    --bg:#060616; --card:#0f1720; --muted:#9fb0c8;
+    --accent-red:#ff4d6d; --accent-blue:#39b2ff; --accent-green:#3dff8a;
+    --glass: rgba(255,255,255,0.03);
+    --glass-2: rgba(255,255,255,0.02);
+    --radius:14px;
+    --safe-gap:14px;
+    --shadow: 0 10px 30px rgba(0,0,0,0.6);
+    font-family:Inter, Poppins, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{height:100%; margin:0; background: radial-gradient(800px 400px at 10% 10%, rgba(57,178,255,0.04), transparent), radial-gradient(900px 500px at 90% 85%, rgba(255,77,109,0.04), transparent), var(--bg); color:#e8f6ff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+  body{display:flex;flex-direction:column;align-items:center;gap:18px;padding:16px 10px 80px;}
+  header{width:100%;max-width:1200px;display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);backdrop-filter: blur(4px);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,0.02)}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo .dot{width:14px;height:14px;border-radius:50%;background:var(--accent-red);box-shadow:0 6px 18px rgba(255,77,109,0.18)}
+  .title{font-weight:800;font-size:1.05rem;letter-spacing:0.2px}
+  nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  nav button{background:transparent;border:1px solid transparent;padding:8px 12px;border-radius:10px;color:#dff4ff;font-weight:600;cursor:pointer;}
+  nav button.active{background:linear-gradient(90deg,var(--accent-blue),#7be1ff);color:#041827;box-shadow:0 8px 30px rgba(57,178,255,0.08);font-weight:800}
+  .controls{display:flex;gap:8px;align-items:center}
+  .btn{padding:8px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#def3ff}
+  .btn-primary{background:linear-gradient(90deg,var(--accent-red),#ff8aa3);color:#111}
+  main{width:100%;max-width:1200px;display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+  @media(max-width:980px){ main{grid-template-columns:1fr; padding-bottom:40px} .right-col{order:2} }
+  .card{background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.01)); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow); border:1px solid rgba(255,255,255,0.02)}
+  .section-head{display:flex;align-items:center;gap:12px}
+  .section-title{font-weight:800; font-size:1.05rem}
+  .muted{color:var(--muted);font-size:0.92rem}
+
+  /* Intro overlay */
+  #introOverlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.6),rgba(0,0,0,0.75));display:flex;align-items:center;justify-content:center;z-index:9999}
+  .intro-box{width:min(920px,94%);background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:26px;border-radius:18px;text-align:center;border:1px solid rgba(255,255,255,0.03)}
+  .intro-title{font-size:2rem;color:var(--accent-blue);font-weight:900; text-shadow:0 8px 40px rgba(57,178,255,0.06)}
+  .intro-sub{color:var(--muted);margin-top:8px}
+  .intro-actions{margin-top:18px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+  /* particles */
+  #particles{position:fixed;inset:0;pointer-events:none;z-index:0}
+
+  /* Game layout */
+  .left-col{display:flex;flex-direction:column;gap:16px}
+  .right-col{display:flex;flex-direction:column;gap:12px}
+  .game-frame{padding:14px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent); border:1px solid rgba(255,255,255,0.02)}
+  .game-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media(max-width:700px){ .game-grid{grid-template-columns:1fr} }
+
+  /* big controls */
+  .big-btn{padding:14px 18px;border-radius:12px;border:none;font-weight:800;cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,0.45)}
+  .big-cta{background:linear-gradient(90deg,var(--accent-blue),#7be1ff); color:#021827}
+  .big-cta:active{transform:scale(0.99)}
+  .stat{font-weight:900;font-size:1.05rem}
+
+  /* theming for sections - unique color vibe */
+  .theme-red{background:linear-gradient(135deg, rgba(255,77,109,0.08), rgba(255,77,109,0.02)); border-left:6px solid rgba(255,77,109,0.18)}
+  .theme-blue{background:linear-gradient(135deg, rgba(57,178,255,0.06), rgba(57,178,255,0.02)); border-left:6px solid rgba(57,178,255,0.18)}
+  .theme-green{background:linear-gradient(135deg, rgba(61,255,138,0.06), rgba(61,255,138,0.02)); border-left:6px solid rgba(61,255,138,0.18)}
+  .theme-purple{background:linear-gradient(135deg, rgba(140,102,255,0.05), rgba(140,102,255,0.02)); border-left:6px solid rgba(140,102,255,0.16)}
+
+  /* cards inside */
+  .game-title{font-weight:800}
+  .row{display:flex;gap:8px;align-items:center}
+  .center{display:flex;justify-content:center;align-items:center}
+  .small{font-size:0.9rem}
+  .kbd{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;font-weight:700}
+  footer{color:var(--muted);margin-top:8px;font-size:0.9rem}
+
+  /* subtle animations */
+  .floaty{animation:floaty 6s ease-in-out infinite}
+  @keyframes floaty{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+
+  /* responsive tweaks for mobile large taps */
+  button, .big-btn{touch-action:manipulation;}
+
+  /* game-specific small styles */
+  .click-large{font-size:1.2rem;padding:18px 22px;border-radius:16px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .card-tile{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border-radius:10px;padding:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .hidden-card{background:linear-gradient(180deg,rgba(0,0,0,0.35),transparent);color:transparent}
+
+  /* small helpers */
+  .muted-2{color:rgba(255,255,255,0.65)}
+</style>
+</head>
+<body>
+
+<!-- Particles canvas -->
+<canvas id="particles"></canvas>
+
+<!-- Intro overlay -->
+<div id="introOverlay" role="dialog" aria-label="Intro">
+  <div class="intro-box floaty">
+    <div class="intro-title">BiniFn Arcade</div>
+    <div class="intro-sub">Orari + Clicker + CPS + Typing + Memory + Reaction + Color Match — sounds, animations, saves.</div>
+    <div class="intro-actions">
+      <button id="enterBtn" class="btn btn-primary">Enter (Start & Autoplay)</button>
+      <button id="enterNoMusic" class="btn btn-ghost">Enter (No Music)</button>
+      <button id="hideIntro" class="btn btn-ghost">Don't show again</button>
+    </div>
+    <div style="margin-top:10px;color:var(--muted)">Tip: If autoplay is blocked by the browser, tap anywhere on the screen to start music.</div>
+  </div>
+</div>
+
+<!-- Top header -->
+<header>
+  <div class="logo"><div class="dot"></div><div class="title">BiniFn Arcade</div></div>
+  <nav id="topNav" aria-label="Main navigation">
+    <button data-section="section-orari" class="active">Orari</button>
+    <button data-section="section-clicker">Clicker</button>
+    <button data-section="section-cps">CPS</button>
+    <button data-section="section-typing">Typing</button>
+    <button data-section="section-memory">Memory</button>
+    <button data-section="section-reaction">Reaction</button>
+    <button data-section="section-color">Color Match</button>
+  </nav>
+  <div class="controls">
+    <button id="muteBtn" class="btn btn-ghost">🔊 Music ON</button>
+    <button id="downloadBtn" class="btn btn-ghost">Download .html</button>
+  </div>
+</header>
+
+<!-- Main layout -->
+<main>
+  <div class="left-col">
+    <!-- Orari / Schedule -->
+    <section id="section-orari" class="card theme-red game-frame" style="position:relative;">
+      <div class="section-head"><div class="section-title">📚 Orari Mësimor X-10</div></div>
+      <div style="margin-top:12px" class="muted">Your schedule — pick a day:</div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost day-btn" data-day="eHene">E Hënë</button>
+        <button class="btn btn-ghost day-btn" data-day="eMarte">E Martë</button>
+        <button class="btn btn-ghost day-btn" data-day="eMerkure">E Mërkurë</button>
+        <button class="btn btn-ghost day-btn" data-day="eEnjte">E Enjte</button>
+        <button class="btn btn-ghost day-btn" data-day="ePremte">E Premte</button>
+      </div>
+      <div id="scheduleArea" style="margin-top:12px"></div>
+      <div class="muted-2" style="margin-top:12px">Made by BiniFn</div>
+    </section>
+
+    <!-- Clicker -->
+    <section id="section-clicker" class="card theme-red game-frame" style="display:none">
+      <div class="section-head">
+        <div class="game-title">💥 Clicker Simulator</div>
+        <div style="margin-left:auto" class="muted">Coins saved locally</div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <button id="clickBig" class="big-btn big-cta click-large">KLIKO!</button>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="stat" id="clickCoins">0</div>
+          <div class="muted">Coins</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button id="upgradeBtnMain" class="btn btn-ghost">Upgrade +1 (<span id="upgradeCost">50</span>💰)</button>
+        <button id="buyAuto" class="btn btn-ghost">Buy Auto (cost: <span id="autoCost">200</span>)</button>
+        <button id="prestige" class="btn btn-ghost">Prestige (reset)</button>
+      </div>
+      <div style="margin-top:12px" class="muted">Power: <span id="clickPower">1</span> • Auto CPS: <span id="autoCps">0</span> • Best: <span id="clickBest">0</span></div>
+    </section>
+
+    <!-- CPS -->
+    <section id="section-cps" class="card theme-green game-frame" style="display:none">
+      <div class="section-head"><div class="game-title">🖱️ CPS Counter (5s)</div><div style="margin-left:auto" class="muted">Best saved</div></div>
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:center">
+        <button id="cpsStartBtn" class="big-btn big-cta">Start 5s CPS</button>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="stat" id="cpsCount">0</div>
+          <div class="muted">Clicks</div>
+        </div>
+      </div>
+      <div style="margin-top:12px" class="muted">CPS: <span id="cpsRate">0</span> • Best CPS: <span id="cpsBest">0</span></div>
+    </section>
+
+    <!-- Typing -->
+    <section id="section-typing" class="card theme-blue game-frame" style="display:none">
+      <div class="section-head"><div class="game-title">⌨️ Typing Test</div><div style="margin-left:auto" class="muted">Best WPM saved</div></div>
+      <div style="margin-top:10px" id="typingSentence" class="muted">Press start to generate...</div>
+      <textarea id="typingInput" rows="3" style="width:100%;margin-top:10px;border-radius:10px;padding:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:inherit"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        <button id="typingStart" class="btn btn-primary">Start</button>
+        <button id="typingSubmit" class="btn btn-ghost">Submit</button>
+        <div style="margin-left:auto" class="muted">Time left: <span id="typingTime">30</span>s</div>
+      </div>
+      <div style="margin-top:10px" class="muted">WPM: <span id="typingWpm">0</span> • Accuracy: <span id="typingAcc">0%</span> • Best: <span id="typingBest">0</span></div>
+    </section>
+
+    <!-- Memory -->
+    <section id="section-memory" class="card theme-purple game-frame" style="display:none">
+      <div class="section-head"><div class="game-title">🧠 Memory Match</div><div style="margin-left:auto" class="muted">Best pairs saved</div></div>
+      <div style="margin-top:12px" id="memoryBoard" class="grid-4"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        <button id="memoryRestartBtn" class="btn btn-primary">Restart Board</button>
+        <div style="margin-left:auto" class="muted">Pairs found: <span id="memoryFound">0</span> / 8 • Best: <span id="memoryBest">0</span></div>
+      </div>
+    </section>
+
+    <!-- Reaction -->
+    <section id="section-reaction" class="card theme-green game-frame" style="display:none">
+      <div class="section-head"><div class="game-title">⚡ Reaction Test</div><div style="margin-left:auto" class="muted">Best time saved</div></div>
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:center">
+        <div id="reactionBox" class="card-tile" style="height:110px;width:110px;background:#441144; border-radius:12px; font-size:18px; cursor:pointer;">Tap</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="muted small">Time: <span id="reactionTime">--</span> s</div>
+          <div class="muted small">Best: <span id="reactionBest">999</span> s</div>
+        </div>
+      </div>
+      <div style="margin-top:8px" class="muted">Tap to start. Wait for green, then tap as fast as you can.</div>
+    </section>
+
+    <!-- Color Match -->
+    <section id="section-color" class="card theme-blue game-frame" style="display:none">
+      <div class="section-head"><div class="game-title">🎨 Color Match</div><div style="margin-left:auto" class="muted">Match color name to color</div></div>
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <div id="colorWord" class="game-title" style="font-size:1.2rem"></div>
+        <div id="colorButtons" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
+      <div style="margin-top:10px" class="muted">Score: <span id="colorScore">0</span> • Best: <span id="colorBest">0</span></div>
+    </section>
+  </div>
+
+  <!-- Right column (saves & quick controls) -->
+  <aside class="right-col">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-weight:800">Saves & Quick</div>
+        <div style="margin-left:auto" class="muted small">LocalStorage</div>
+      </div>
+      <div style="margin-top:12px" class="muted small">
+        Clicker coins: <strong id="saveCoins">0</strong><br>
+        Clicker power: <strong id="savePower">1</strong><br>
+        Clicker price: <strong id="savePrice">50</strong>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="resetAll" class="btn btn-ghost">Reset saves</button>
+        <button id="clearIntro" class="btn btn-ghost">Show Intro again</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:800">Tips</div>
+      <ul style="margin-top:8px;color:var(--muted);line-height:1.5">
+        <li>Tap "Enter" to start music (autoplay attempt included)</li>
+        <li>All progress saved locally in your browser</li>
+        <li>Use large buttons on mobile for easier play</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:800">Download</div>
+      <div style="margin-top:8px" class="muted">You can download this page as a single HTML file:</div>
+      <div style="margin-top:8px"><button id="downloadFile" class="btn btn-primary">Download .html</button></div>
+    </div>
+  </aside>
+</main>
+
+<footer style="text-align:center;max-width:1200px;margin-top:8px;color:var(--muted)">Made by BiniFn — All data stored locally in your browser (localStorage).</footer>
+
+<!-- AUDIO ELEMENTS -->
+<audio id="bgMusic" loop src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_bbe3da5b2.mp3?filename=ambient-110997.mp3"></audio>
+<audio id="sfxClick" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_e71f2b2ae0.mp3?filename=mouse-click-111086.mp3"></audio>
+<audio id="sfxUpgrade" src="https://cdn.pixabay.com/download/audio/2021/09/01/audio_3a2e96c4b2.mp3?filename=success-1-6297.mp3"></audio>
+<audio id="sfxCps" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_80f4d7a3c9.mp3?filename=click-03-111103.mp3"></audio>
+<audio id="sfxMatch" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_3a2e96c4b2.mp3?filename=success-1-6297.mp3"></audio>
+<audio id="sfxMiss" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_3a6d5a9a5b.mp3?filename=error-126923.mp3"></audio>
+<audio id="sfxSnake" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_1f6958b1a6.mp3?filename=plop-596.mp3"></audio>
+
+<script>
+/* ========= Utilities ========= */
+const $ = (s, root = document) => root.querySelector(s);
+const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
+const saveJSON = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+const loadJSON = (k, fallback) => { try { const v = JSON.parse(localStorage.getItem(k)); return v==null?fallback:v } catch(e){ return fallback } };
+const clamp = (v,a,b) => Math.max(a, Math.min(b,v));
+
+/* ========= Particles Background ========= */
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let particles = [];
+function resizeCanvas(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+function initParticles(){
+  particles = [];
+  const count = Math.round((canvas.width*canvas.height)/90000);
+  for(let i=0;i<count;i++){
+    particles.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*1.4+0.6,
+      dx: (Math.random()-0.5)*0.3,
+      dy: (Math.random()-0.5)*0.3,
+      hue: Math.random()*360
+    });
+  }
+}
+initParticles();
+function drawParticles(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(const p of particles){
+    p.x += p.dx; p.y += p.dy;
+    if(p.x<0) p.x = canvas.width;
+    if(p.x>canvas.width) p.x = 0;
+    if(p.y<0) p.y = canvas.height;
+    if(p.y>canvas.height) p.y = 0;
+    const g = ctx.createRadialGradient(p.x,p.y,p.r*0.1,p.x,p.y,p.r*6);
+    g.addColorStop(0, `hsla(${p.hue},80%,70%,0.08)`);
+    g.addColorStop(1, `hsla(${(p.hue+40)%360},80%,50%,0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r*6,0,Math.PI*2);
+    ctx.fill();
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+/* ========= Audio control & autoplay ========= */
+const bgMusic = $('#bgMusic');
+const sfxClick = $('#sfxClick');
+const sfxUpgrade = $('#sfxUpgrade');
+const sfxCps = $('#sfxCps');
+const sfxMatch = $('#sfxMatch');
+const sfxMiss = $('#sfxMiss');
+const sfxSnake = $('#sfxSnake');
+
+let musicOn = true;
+if(localStorage.getItem('musicOn') === '0') musicOn = false;
+function setMusic(on){
+  musicOn = !!on;
+  try{ bgMusic.muted = !musicOn; }catch(e){}
+  $('#muteBtn').innerText = musicOn? '🔊 Music ON':'🔇 Music OFF';
+  localStorage.setItem('musicOn', musicOn ? '1' : '0');
+}
+setMusic(musicOn);
+
+/* Try autoplay — also provide fallback on user interaction */
+async function tryStartMusic(){
+  if(!musicOn) return;
+  try{
+    await bgMusic.play();
+  }catch(e){
+    // blocked — will start on user gesture
+    console.log('Autoplay blocked — will wait for interaction');
+  }
+}
+tryStartMusic();
+
+/* ensure any tap will attempt to start music if blocked */
+function unlockAudioOnGesture(){
+  try { bgMusic.play().catch(()=>{}); sfxClick.play().catch(()=>{}); } catch(e){}
+  window.removeEventListener('touchstart', unlockAudioOnGesture);
+  window.removeEventListener('mousedown', unlockAudioOnGesture);
+}
+window.addEventListener('touchstart', unlockAudioOnGesture, { once:true });
+window.addEventListener('mousedown', unlockAudioOnGesture, { once:true });
+
+$('#muteBtn').addEventListener('click', ()=>{
+  setMusic(!musicOn);
+});
+
+/* ========= Intro actions ========= */
+const introOverlay = $('#introOverlay');
+$('#enterBtn').addEventListener('click', ()=>{ setMusic(true); introOverlay.style.display='none'; tryStartMusic(); });
+$('#enterNoMusic').addEventListener('click', ()=>{ setMusic(false); introOverlay.style.display='none'; });
+$('#hideIntro').addEventListener('click', ()=>{ localStorage.setItem('hideIntro','1'); introOverlay.style.display='none'; });
+
+if(localStorage.getItem('hideIntro') === '1') introOverlay.style.display = 'none';
+
+/* ========= Navigation ========= */
+const navButtons = $$('#topNav button');
+function showSection(id){
+  document.querySelectorAll('main .card').forEach(c => c.style.display = 'none');
+  $(`#${id}`).style.display = 'block';
+  navButtons.forEach(b => b.classList.toggle('active', b.dataset.section === id));
+}
+navButtons.forEach(b => {
+  b.addEventListener('click', ()=> {
+    showSection(b.dataset.section);
+  });
+});
+showSection('section-orari'); // initial
+
+/* ========= ORARI (schedule) ========= */
+const orari = {
+  eHene:[{ora:"1",lenda:"Gjeografi"},{ora:"2",lenda:"Gjeografi"},{ora:"3",lenda:"TIK"},{ora:"4",lenda:"TIK"},{ora:"5",lenda:"E.Fizik"},{ora:"6",lenda:"E.Fizik"}],
+  eMarte:[{ora:"1",lenda:"Frengjisht"},{ora:"2",lenda:"Frengjisht"},{ora:"3",lenda:"Qytetari"},{ora:"4",lenda:"Qytetari"},{ora:"5",lenda:"Letërsi"},{ora:"6",lenda:"Letërsi"}],
+  eMerkure:[{ora:"1",lenda:"Gjuhë Shqip"},{ora:"2",lenda:"Gjuhë Shqip"},{ora:"3",lenda:"Biologji"},{ora:"4",lenda:"Biologji"},{ora:"5",lenda:"Matematikë"},{ora:"6",lenda:"Matematikë"}],
+  eEnjte:[{ora:"1",lenda:"Kimi"},{ora:"2",lenda:"Kimi"},{ora:"3",lenda:"Fizikë"},{ora:"4",lenda:"Fizikë"},{ora:"5",lenda:"Anglisht"},{ora:"6",lenda:"E.Fizik"}],
+  ePremte:[{ora:"1",lenda:"Matematikë"},{ora:"2",lenda:"Matematikë"},{ora:"3",lenda:"Anglisht"},{ora:"4",lenda:"Anglisht"},{ora:"5",lenda:"E.Fizik"},{ora:"6",lenda:"E.Fizik"}]
+};
+function renderDay(day){
+  const arr = orari[day] || [];
+  const html = arr.map(p => `<div style="display:flex;justify-content:space-between;padding:8px;border-radius:8px;background:var(--glass);margin-bottom:8px"><div>${p.lenda}</div><div class="muted">Ora ${p.ora}</div></div>`).join('');
+  $('#scheduleArea').innerHTML = html;
+}
+$$('.day-btn').forEach(b => b.addEventListener('click', ()=>{
+  $$('.day-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  renderDay(b.dataset.day);
+}));
+renderDay('eHene');
+
+/* ========= CLICKER ========= */
+let clickerState = loadJSON('bini_clicker', { coins: 0, power: 1, price: 50, auto: 0, autoPrice: 200, best: 0, prestige:0 });
+function updateClickerUI(){
+  $('#clickCoins').innerText = clickerState.coins;
+  $('#clickPower').innerText = clickerState.power;
+  $('#upgradeCost').innerText = clickerState.price;
+  $('#saveCoins').innerText = clickerState.coins;
+  $('#savePower').innerText = clickerState.power;
+  $('#savePrice').innerText = clickerState.price;
+  $('#clickBest').innerText = clickerState.best;
+  $('#autoCost').innerText = clickerState.autoPrice;
+  $('#autoCps').innerText = clickerState.auto;
+}
+updateClickerUI();
+
+function saveClicker(){ saveJSON('bini_clicker', clickerState); }
+
+$('#clickBig').addEventListener('click', ()=> {
+  clickerState.coins += clickerState.power;
+  if(musicOn && sfxClick) try{sfxClick.currentTime=0; sfxClick.play();}catch(e){}
+  clickerState.best = Math.max(clickerState.best, clickerState.coins);
+  saveClicker(); updateClickerUI();
+});
+
+$('#upgradeBtnMain').addEventListener('click', ()=> {
+  if(clickerState.coins >= clickerState.price){
+    clickerState.coins -= clickerState.price;
+    clickerState.power += 1;
+    clickerState.price = Math.floor(clickerState.price * 1.6);
+    if(musicOn && sfxUpgrade) try{sfxUpgrade.currentTime=0; sfxUpgrade.play();}catch(e){}
+    saveClicker(); updateClickerUI();
+  } else alert("S'ke mjaftueshëm monedha!");
+});
+
+$('#buyAuto').addEventListener('click', ()=>{
+  if(clickerState.coins >= clickerState.autoPrice){
+    clickerState.coins -= clickerState.autoPrice;
+    clickerState.auto += 1;
+    clickerState.autoPrice = Math.floor(clickerState.autoPrice * 1.8);
+    saveClicker(); updateClickerUI();
+  } else alert("S'ke mjaftueshëm monedha!");
+});
+
+/* Auto clicker loop */
+setInterval(()=>{
+  if(clickerState.auto > 0){
+    const gain = clickerState.auto; // 1 auto gives 1 coin per second (or you can scale)
+    clickerState.coins += gain;
+    clickerState.best = Math.max(clickerState.best, clickerState.coins);
+    saveClicker(); updateClickerUI();
+  }
+}, 1000);
+
+/* Prestige reset */
+$('#prestige').addEventListener('click', ()=>{
+  if(confirm('Prestige will reset coins and upgrades in exchange for prestige count. Continue?')){
+    clickerState.coins = 0;
+    clickerState.power = 1;
+    clickerState.price = 50;
+    clickerState.auto = 0;
+    clickerState.autoPrice = 200;
+    clickerState.prestige += 1;
+    saveClicker(); updateClickerUI();
+  }
+});
+
+/* ========= CPS ========= */
+let cpsState = loadJSON('bini_cps', { best: 0 });
+let cpsRunning = false;
+let cpsCount = 0;
+let cpsStartTime = 0;
+function updateCPSUI(){
+  $('#cpsCount').innerText = cpsCount;
+  $('#cpsRate').innerText = (cpsRunning? ( (cpsCount / ((Date.now()-cpsStartTime)/1000)).toFixed(2) ) : 0);
+  $('#cpsBest').innerText = cpsState.best;
+}
+
+$('#cpsStartBtn').addEventListener('click', ()=>{
+  if(cpsRunning) return;
+  cpsRunning = true;
+  cpsCount = 0; cpsStartTime = Date.now();
+  $('#cpsStartBtn').innerText = 'Click FAST!';
+  updateCPSUI();
+  function clickHandler(){ cpsCount++; if(musicOn && sfxCps) try{sfxCps.currentTime=0; sfxCps.play();}catch(e){} updateCPSUI(); }
+  window.addEventListener('mousedown', clickHandler);
+  window.addEventListener('touchstart', clickHandler);
+  setTimeout(()=>{
+    window.removeEventListener('mousedown', clickHandler);
+    window.removeEventListener('touchstart', clickHandler);
+    cpsRunning = false;
+    const cps = +(cpsCount/5).toFixed(2);
+    if(cps > cpsState.best){ cpsState.best = cps; saveJSON('bini_cps', cpsState); }
+    $('#cpsStartBtn').innerText = 'Start 5s CPS';
+    updateCPSUI();
+  }, 5000);
+});
+
+/* ========= TYPING ========= */
+const sentences = [
+  "The quick brown fox jumps over the lazy dog.",
+  "Practice typing daily to increase speed and accuracy.",
+  "Coding is creative work — build things that matter.",
+  "BiniFn Arcade brings games and schedule together."
+];
+let typingState = loadJSON('bini_typing', { best: 0 });
+$('#typingBest').innerText = typingState.best;
+let typingTimer = null;
+let typingTimeLeft = 30;
+let currentSentence = '';
+
+function newTypingSentence(){
+  currentSentence = sentences[Math.floor(Math.random()*sentences.length)];
+  $('#typingSentence').innerText = currentSentence;
+  $('#typingInput').value = '';
+  typingTimeLeft = 30;
+  $('#typingTime').innerText = typingTimeLeft;
+  clearInterval(typingTimer);
+  typingTimer = setInterval(()=>{
+    typingTimeLeft--;
+    $('#typingTime').innerText = typingTimeLeft;
+    if(typingTimeLeft <= 0){
+      clearInterval(typingTimer);
+      evaluateTyping();
+    }
+  }, 1000);
+}
+
+$('#typingStart').addEventListener('click', ()=> {
+  if(musicOn && sfxClick) try{sfxClick.currentTime=0; sfxClick.play();}catch(e){}
+  newTypingSentence();
+  $('#typingInput').focus();
+});
+
+$('#typingSubmit').addEventListener('click', ()=> evaluateTyping());
+
+function evaluateTyping(){
+  clearInterval(typingTimer);
+  const typed = $('#typingInput').value || '';
+  // accuracy based on character match vs sentence length
+  const len = Math.min(typed.length, currentSentence.length);
+  let correct = 0;
+  for(let i=0;i<len;i++) if(typed[i] === currentSentence[i]) correct++;
+  const accuracy = currentSentence.length ? Math.round((correct / currentSentence.length) * 100) : 0;
+  const words = Math.max(0, Math.round((typed.length / 5) / ((30 - typingTimeLeft + 0.0001)/60)));
+  $('#typingWpm').innerText = words;
+  $('#typingAcc').innerText = accuracy + '%';
+  if(words > typingState.best){ typingState.best = words; saveJSON('bini_typing', typingState); $('#typingBest').innerText = words; }
+  if(musicOn && sfxMatch) try{sfxMatch.currentTime=0; sfxMatch.play();}catch(e){}
+  // auto new sentence for next round
+  setTimeout(()=> newTypingSentence(), 900);
+}
+
+/* Start a sentence on load */
+newTypingSentence();
+
+/* ========= MEMORY MATCH ========= */
+const icons = ["🍎","🍌","🍇","🍑","🍒","🍋","🥝","🍍"];
+let memoryState = loadJSON('bini_memory', { bestPairs: 0 });
+$('#memoryBest').innerText = memoryState.bestPairs;
+let memoryCards = [];
+let flipped = [];
+let foundPairs = 0;
+
+function setupMemory(){
+  const pairs = shuffle([...icons, ...icons]);
+  memoryCards = pairs.map((icon, idx) => ({ id: idx, icon, solved: false }));
+  flipped = []; foundPairs = 0;
+  renderMemory();
+  $('#memoryFound').innerText = foundPairs;
+}
+function renderMemory(){
+  $('#memoryBoard').innerHTML = memoryCards.map(c => `<button data-id="${c.id}" class="card-tile ${c.solved ? '' : 'hidden-card'}">${c.solved ? c.icon : ''}</button>`).join('');
+  $$('#memoryBoard button').forEach(btn => {
+    btn.addEventListener('click', ()=> {
+      const id = +btn.dataset.id;
+      flipCard(id, btn);
+    });
+  });
+}
+function flipCard(id, btnEl){
+  const card = memoryCards[id];
+  if(card.solved) return;
+  if(flipped.some(f=>f.id===id)) return;
+  // reveal
+  btnEl.classList.remove('hidden-card'); btnEl.innerText = card.icon;
+  flipped.push({ id, btnEl, icon: card.icon });
+  if(flipped.length === 2){
+    if(flipped[0].icon === flipped[1].icon){
+      // match
+      memoryCards[flipped[0].id].solved = true;
+      memoryCards[flipped[1].id].solved = true;
+      flipped = [];
+      foundPairs++;
+      $('#memoryFound').innerText = foundPairs;
+      if(musicOn && sfxMatch) try{sfxMatch.currentTime=0; sfxMatch.play();}catch(e){}
+      if(foundPairs === icons.length){
+        if(foundPairs > memoryState.bestPairs){ memoryState.bestPairs = foundPairs; saveJSON('bini_memory', memoryState); $('#memoryBest').innerText = memoryState.bestPairs; }
+      }
+    } else {
+      if(musicOn && sfxMiss) try{sfxMiss.currentTime=0; sfxMiss.play();}catch(e){}
+      setTimeout(()=>{
+        flipped.forEach(f=>{
+          f.btnEl.classList.add('hidden-card'); f.btnEl.innerText = '';
+        });
+        flipped = [];
+      }, 700);
+    }
+  }
+}
+$('#memoryRestartBtn').addEventListener('click', setupMemory);
+setupMemory();
+
+/* ========= REACTION ========= */
+let reactionTimer = null;
+let reactionStart = 0;
+let reactionBest = parseFloat(localStorage.getItem('bini_reaction_best') || '999');
+$('#reactionBest').innerText = reactionBest === 999 ? '--' : reactionBest;
+
+$('#reactionBox').addEventListener('click', ()=>{
+  const el = $('#reactionBox');
+  if(el.dataset.state === 'ready'){
+    // user clicked too early
+    if(musicOn && sfxMiss) try{sfxMiss.currentTime=0; sfxMiss.play();}catch(e){}
+    el.style.background = '#661111';
+    el.innerText = 'Too early!';
+    el.dataset.state = 'idle';
+    return;
+  }
+  if(el.dataset.state === 'waiting'){
+    // user clicked when green
+    const t = (Date.now() - reactionStart)/1000;
+    $('#reactionTime').innerText = t.toFixed(3);
+    reactionBest = Math.min(reactionBest, t);
+    localStorage.setItem('bini_reaction_best', reactionBest);
+    $('#reactionBest').innerText = reactionBest.toFixed(3);
+    el.style.background = '#114411';
+    el.innerText = 'Nice!';
+    el.dataset.state = 'idle';
+    if(musicOn && sfxMatch) try{sfxMatch.currentTime=0; sfxMatch.play();}catch(e){}
+    return;
+  }
+  // start waiting
+  el.style.background = '#444444';
+  el.innerText = 'Wait...';
+  el.dataset.state = 'ready';
+  const delay = Math.random()*2500 + 800;
+  reactionTimer = setTimeout(()=>{
+    el.style.background = '#11aa44';
+    el.innerText = 'Tap!';
+    el.dataset.state = 'waiting';
+    reactionStart = Date.now();
+  }, delay);
+});
+
+/* ========= COLOR MATCH ========= */
+const colors = [
+  { name: "RED", value: "#ff4d6d" },
+  { name: "BLUE", value: "#39b2ff" },
+  { name: "GREEN", value: "#3dff8a" },
+  { name: "PURPLE", value: "#8c66ff" },
+  { name: "YELLOW", value: "#ffd76b" },
+  { name: "ORANGE", value: "#ff9a4d" }
+];
+let colorState = loadJSON('bini_color', { best: 0 });
+$('#colorBest').innerText = colorState.best;
+let colorScore = 0;
+
+function newColorRound(){
+  // choose a word and a displayed color (may mismatch)
+  const word = colors[Math.floor(Math.random()*colors.length)];
+  const display = colors[Math.floor(Math.random()*colors.length)];
+  $('#colorWord').innerText = word.name;
+  $('#colorWord').style.color = display.value;
+  $('#colorButtons').innerHTML = '';
+  const options = shuffle(colors.slice()).slice(0,4);
+  // ensure correct answer included
+  if(!options.some(o=>o.name===word.name)) options[Math.floor(Math.random()*4)] = word;
+  options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-ghost';
+    btn.style.background = opt.value; btn.style.color = '#021827'; btn.style.fontWeight = '800';
+    btn.innerText = opt.name;
+    btn.addEventListener('click', ()=> {
+      if(opt.name === word.name){
+        colorScore++;
+        if(musicOn && sfxMatch) try{sfxMatch.currentTime=0; sfxMatch.play();}catch(e){}
+        if(colorScore > colorState.best){ colorState.best = colorScore; saveJSON('bini_color', colorState); $('#colorBest').innerText = colorState.best; }
+      } else {
+        colorScore = Math.max(0, colorScore - 1);
+        if(musicOn && sfxMiss) try{sfxMiss.currentTime=0; sfxMiss.play();}catch(e){}
+      }
+      $('#colorScore').innerText = colorScore;
+      newColorRound();
+    });
+    $('#colorButtons').appendChild(btn);
+  });
+}
+newColorRound();
+
+/* ========= Helpers ========= */
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]] = [arr[j],arr[i]] } return arr; }
+
+/* ========= Download self HTML (generate blob) ========= */
+$('#downloadFile').addEventListener('click', ()=>{
+  const html = '<!doctype html>\\n' + document.documentElement.outerHTML;
+  const blob = new Blob([document.documentElement.outerHTML], { type:'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'binifn-arcade.html';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+/* quick download button in header (same) */
+$('#downloadBtn').addEventListener('click', ()=> $('#downloadFile').click());
+
+/* ========= Reset / show intro controls ========= */
+$('#resetAll').addEventListener('click', ()=>{
+  if(confirm('Reset ALL saves and reload page?')){
+    localStorage.clear();
+    location.reload();
+  }
+});
+$('#clearIntro').addEventListener('click', ()=> {
+  localStorage.removeItem('hideIntro');
+  alert('Intro will show next time.');
+});
+
+/* ========= Initialization UI ========= */
+(function initUI(){
+  // update some saved values
+  updateClickerUI();
+  $('#cpsBest').innerText = (loadJSON('bini_cps',{best:0}).best || 0);
+  $('#typingBest').innerText = (loadJSON('bini_typing',{best:0}).best || loadJSON('bini_typing',{best:0}).best || 0);
+  $('#memoryBest').innerText = (loadJSON('bini_memory',{bestPairs:0}).bestPairs || 0);
+  $('#reactionBest').innerText = (localStorage.getItem('bini_reaction_best') || '--');
+  $('#colorBest').innerText = (loadJSON('bini_color',{best:0}).best || 0);
+  // ensure UI consistent
+  if(localStorage.getItem('hideIntro') === '1') introOverlay.style.display = 'none';
+  // start background music if allowed
+  tryStartMusic();
+})();
+
+/* ========= Safety: free resources on unload ========= */
+window.addEventListener('beforeunload', ()=> {
+  saveClicker();
+});
+
+</script>
+</body>
+</html>
