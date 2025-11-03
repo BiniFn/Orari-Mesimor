@@ -1,0 +1,130 @@
+<!--
+  © 2025 BiniFn. All Rights Reserved.
+  This code cannot be copied, modified, or redistributed without permission.
+-->
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orari Mësimor X-10</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Poppins", sans-serif; background: #000; color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+
+  #particles { position: absolute; inset:0; background: linear-gradient(135deg,#660000 0%,#000 100%); z-index:0; }
+
+  .intro-screen {
+    position: absolute; inset:0; display:flex; justify-content:center; align-items:center;
+    flex-direction:column; text-align:center; padding:20px; overflow:hidden; z-index:2;
+    opacity:1; transition: opacity 0.8s;
+  }
+  .intro-screen h1 { font-size:2.2em; color:#ff6666; margin-bottom:20px; text-shadow:0 0 20px #ff0000; animation: slideDown 1s ease forwards; }
+  .intro-screen p { font-size:1.2em; color:#fff; margin-bottom:30px; animation: slideUp 1s ease forwards; }
+  .start-btn {
+    background:#ff0000; border:none; padding:15px 30px; border-radius:15px; font-size:1.2em;
+    color:#fff; font-weight:bold; cursor:pointer; box-shadow:0 0 20px rgba(255,0,0,0.5);
+    transition: transform 0.3s, box-shadow 0.3s; animation: pulse 1.5s infinite; z-index:3;
+  }
+  .start-btn:hover { transform:scale(1.1); box-shadow:0 0 30px rgba(255,0,0,0.7); }
+
+  .watermark { position:absolute; bottom:10px; width:100%; text-align:center; font-size:0.8em; color:rgba(255,255,255,0.4); pointer-events:none; z-index:3; }
+
+  .container {
+    width:100%; max-width:600px; background:#0f0f0f; border-radius:20px; overflow:hidden; box-shadow:0 0 25px rgba(255,0,0,0.4);
+    display:none; z-index:1; animation: fadeIn 1s ease forwards; max-height:90vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  }
+  .header { background: linear-gradient(135deg,#ff0000 0%,#660000 100%); padding:25px 20px; text-align:center; border-bottom:2px solid #ff3333; }
+  .header h1 { font-size:1.8em; font-weight:bold; }
+  .subtitle { font-size:1em; color:#ffcccc; }
+
+  .day-buttons { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; padding:15px; background:#121212; }
+  .day-btn { background:transparent; border:2px solid #ff0000; color:#fff; font-weight:bold; padding:10px 18px; border-radius:12px; transition:0.3s; cursor:pointer; }
+  .day-btn:hover { background:#ff0000; }
+  .day-btn.active { background:#ff0000; box-shadow:0 0 15px rgba(255,0,0,0.5); }
+
+  .schedule-content { padding:20px; animation:fadeIn 0.6s ease; }
+  .day-title { text-align:center; color:#ff3333; font-size:1.6em; font-weight:bold; margin-bottom:20px; text-shadow:0 0 10px #ff0000; }
+  .period-block { background:#1a1a1a; border-radius:14px; padding:15px 20px; margin-bottom:15px; border-left:5px solid #ff0000; transition:0.3s; animation:slideUp 0.4s ease-in-out; }
+  .period-block:hover { transform:scale(1.03); box-shadow:0 0 15px rgba(255,0,0,0.4); }
+  .period-header { color:#ff6666; font-size:0.9em; font-weight:600; }
+  .subject-name { font-size:1.3em; font-weight:600; color:#fff; margin-top:5px; }
+
+  @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+  @keyframes slideUp { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+  @keyframes slideDown { from {opacity:0; transform:translateY(-20px);} to {opacity:1; transform:translateY(0);} }
+  @keyframes pulse { 0%,100%{transform:scale(1);}50%{transform:scale(1.05);} }
+
+  @media(max-width:480px){ .day-btn{flex:1 1 45%; font-size:0.9em;} .header h1{font-size:1.5em;} .subject-name{font-size:1.1em;} .intro-screen h1{font-size:1.5em;} .intro-screen p{font-size:1em;} .start-btn{font-size:1em; padding:12px 25px;} .schedule-content{padding:15px;} }
+</style>
+</head>
+<body>
+
+<div id="particles"></div>
+
+<div class="intro-screen" id="introScreen">
+  <h1>Mirësevini në klasë</h1>
+  <p>Orari Mësimor X-10</p>
+  <button class="start-btn" onclick="startSchedule()">Filloni</button>
+  <div class="watermark">Made by BiniFn</div>
+</div>
+
+<div class="container" id="scheduleContainer">
+  <div class="header">
+    <h1>Orari Mësimor</h1>
+    <div class="subtitle">X-10</div>
+  </div>
+  <div class="day-buttons">
+    <button class="day-btn active" onclick="showDay('eHene')">E Hënë</button>
+    <button class="day-btn" onclick="showDay('eMarte')">E Martë</button>
+    <button class="day-btn" onclick="showDay('eMerkure')">E Mërkurë</button>
+    <button class="day-btn" onclick="showDay('eEnjte')">E Enjte</button>
+    <button class="day-btn" onclick="showDay('ePremte')">E Premte</button>
+  </div>
+  <div class="schedule-content" id="scheduleContent"></div>
+</div>
+
+<script>
+const orari={
+  eHene:[{ora:"1",lenda:"Gjeografi"},{ora:"2",lenda:"Gjeografi"},{ora:"3",lenda:"TIK"},{ora:"4",lenda:"TIK"},{ora:"5",lenda:"E.Fizik"},{ora:"6",lenda:"E.Fizik"}],
+  eMarte:[{ora:"1",lenda:"Frengjisht"},{ora:"2",lenda:"Frengjisht"},{ora:"3",lenda:"Qytetari"},{ora:"4",lenda:"Qytetari"},{ora:"5",lenda:"Letërsi"},{ora:"6",lenda:"Letërsi"}],
+  eMerkure:[{ora:"1",lenda:"Gjuhë Shqip"},{ora:"2",lenda:"Gjuhë Shqip"},{ora:"3",lenda:"Biologji"},{ora:"4",lenda:"Biologji"},{ora:"5",lenda:"Matematikë"},{ora:"6",lenda:"Matematikë"}],
+  eEnjte:[{ora:"1",lenda:"Kimi"},{ora:"2",lenda:"Kimi"},{ora:"3",lenda:"Fizikë"},{ora:"4",lenda:"Fizikë"},{ora:"5",lenda:"Anglisht"},{ora:"6",lenda:"E.Fizik"}],
+  ePremte:[{ora:"1",lenda:"Matematikë"},{ora:"2",lenda:"Matematikë"},{ora:"3",lenda:"Anglisht"},{ora:"4",lenda:"Anglisht"},{ora:"5",lenda:"E.Fizik"},{ora:"6",lenda:"E.Fizik"}]
+};
+
+function showDay(dita){
+  document.querySelectorAll(".day-btn").forEach(btn=>btn.classList.remove("active"));
+  const clickedButton=Array.from(document.querySelectorAll(".day-btn")).find(btn=>btn.textContent.replace("ë","e")===dita.replace("ë","e"));
+  if(clickedButton) clickedButton.classList.add("active");
+  const content=document.getElementById("scheduleContent");
+  const ditaOrari=orari[dita];
+  if(ditaOrari){
+    let html=`<div class="day-title">${dita.replace("e","E ")}</div>`;
+    ditaOrari.forEach(item=>{html+=`<div class="period-block"><div class="period-header">Ora ${item.ora}</div><div class="subject-name">${item.lenda}</div></div>`});
+    content.innerHTML=html;
+  }
+}
+
+function startSchedule(){
+  const intro=document.getElementById("introScreen");
+  const container=document.getElementById("scheduleContainer");
+  intro.style.opacity="0";
+  setTimeout(()=>{ intro.style.display="none"; container.style.display="block"; showDay("eHene"); },800);
+}
+
+/* Particles */
+const canvas=document.createElement("canvas");
+const particlesDiv=document.getElementById("particles");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+particlesDiv.appendChild(canvas);
+const ctx=canvas.getContext("2d");
+const particles=[];
+for(let i=0;i<80;i++){particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2+1,dx:(Math.random()-0.5)*1.5,dy:(Math.random()-0.5)*1.5});}
+function animateParticles(){ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle="rgba(255,0,0,0.5)";ctx.fill(); p.x+=p.dx; p.y+=p.dy; if(p.x>canvas.width||p.x<0)p.dx*=-1; if(p.y>canvas.height||p.y<0)p.dy*=-1;}); requestAnimationFrame(animateParticles);}
+animateParticles();
+window.addEventListener("resize",()=>{canvas.width=window.innerWidth; canvas.height=window.innerHeight;});
+</script>
+</body>
+</html>
