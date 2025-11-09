@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiniFn - 365 Day Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        /* Animated background */
+        .background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at top, #1a0000 0%, #000000 50%);
+            z-index: 0;
+        }
+
+        .background::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 0, 0, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 0, 0, 0.08) 0%, transparent 50%);
+            animation: bgMove 15s ease-in-out infinite;
+        }
+
+        @keyframes bgMove {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-30px, -30px); }
+        }
+
+        /* Optimized particles */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #ff0000;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ff0000;
+            animation: float 12s infinite linear;
+            opacity: 0;
+            will-change: transform;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(80px);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            z-index: 2;
+            max-width: 700px;
+            width: 90%;
+            position: relative;
+        }
+
+        .logo {
+            font-size: clamp(3rem, 10vw, 5rem);
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 
+                0 0 10px #ff0000,
+                0 0 20px #ff0000,
+                0 0 30px #8b0000;
+            margin-bottom: 10px;
+            letter-spacing: 0.1em;
+            animation: logoGlow 2.5s ease-in-out infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% {
+                text-shadow: 
+                    0 0 10px #ff0000,
+                    0 0 20px #ff0000,
+                    0 0 30px #8b0000;
+            }
+            50% {
+                text-shadow: 
+                    0 0 15px #ff0000,
+                    0 0 30px #ff0000,
+                    0 0 45px #8b0000;
+            }
+        }
+
+        .subtitle {
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+            color: #ff4444;
+            margin-bottom: 50px;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+
+        .day-container {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.3), rgba(0, 0, 0, 0.8));
+            border: 2px solid #ff0000;
+            border-radius: 20px;
+            padding: 40px 20px;
+            margin: 30px 0;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            animation: containerPulse 3s ease-in-out infinite;
+        }
+
+        .day-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(255, 0, 0, 0.08),
+                transparent
+            );
+            animation: shine 4s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        @keyframes containerPulse {
+            0%, 100% {
+                box-shadow: 0 0 30px rgba(255, 0, 0, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 45px rgba(255, 0, 0, 0.5);
+            }
+        }
+
+        .day-label {
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            color: #ff4444;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .day-display {
+            font-size: clamp(4rem, 12vw, 6rem);
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 
+                0 0 20px #ff0000,
+                0 0 40px #ff0000;
+            animation: dayPulse 2s ease-in-out infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes dayPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.03);
+            }
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            color: #ff4444;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8b0000, #ff0000, #ff4444);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+            transition: width 0.8s ease-out;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: progressShine 2.5s infinite;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+
+        .next-button {
+            margin-top: 40px;
+            padding: 18px 60px;
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            font-weight: bold;
+            color: #ffffff;
+            background: linear-gradient(135deg, #8b0000, #ff0000);
+            border: 2px solid #ff0000;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .next-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        .next-button:hover::before {
+            width: 250px;
+            height: 250px;
+        }
+
+        .next-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0 45px rgba(255, 0, 0, 0.6);
+            background: linear-gradient(135deg, #ff0000, #ff4444);
+        }
+
+        .next-button:active {
+            transform: translateY(-1px);
+        }
+
+        .links-container {
+            display: none;
+            margin-top: 40px;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .links-container.show {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .link-button {
+            display: block;
+            margin: 20px auto;
+            padding: 18px 50px;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            font-weight: bold;
+            color: #ffffff;
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.5), rgba(0, 0, 0, 0.8));
+            border: 2px solid #ff0000;
+            border-radius: 50px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            max-width: 350px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .link-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 0, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .link-button:hover::before {
+            left: 100%;
+        }
+
+        .link-button:hover {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.6), rgba(139, 0, 0, 0.9));
+            transform: translateY(-3px);
+            box-shadow: 0 0 40px rgba(255, 0, 0, 0.5);
+            border-color: #ff4444;
+        }
+
+        .challenge-badge {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.3), rgba(0, 0, 0, 0.6));
+            border-radius: 15px;
+            color: #ffffff;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            margin-top: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 0, 0, 0.5);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+            animation: badgePulse 4s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(255, 0, 0, 0.35);
+            }
+        }
+
+        .challenge-badge small {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.85em;
+            opacity: 0.8;
+            color: #ff6666;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .next-button, .link-button {
+                padding: 15px 40px;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .day-container {
+                padding: 30px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <div class="logo">BiniFn</div>
+        <div class="subtitle">Gamer • Creator • Programmer</div>
+        
+        <div class="day-container">
+            <div class="day-label">Challenge Progress</div>
+            <div class="day-display" id="dayDisplay">Day 1</div>
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span id="progressText">0%</span>
+                    <span>365 Days</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <button class="next-button" id="nextBtn" onclick="showLinks()">
+            <span style="position: relative; z-index: 1;">Enter</span>
+        </button>
+        
+        <div class="links-container" id="linksContainer">
+            <a href="https://guns.lol/binifn" class="link-button" target="_blank">
+                🌐 Visit Website
+            </a>
+            <a href="https://youtube.com/@binifn.x" class="link-button" target="_blank">
+                📺 YouTube Channel
+            </a>
+        </div>
+
+        <div class="challenge-badge">
+            🎮 365 Day Livestream Challenge
+            <small>Started: November 7th, 2025</small>
+        </div>
+    </div>
+
+    <script>
+        // Balanced particle count
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = window.innerWidth < 768 ? 20 : 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 12 + 's';
+                particle.style.animationDuration = (Math.random() * 8 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Calculate current day of challenge
+        function calculateChallengeDay() {
+            const startDate = new Date('2025-11-07T00:00:00');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const diffTime = today - startDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            return diffDays > 0 ? diffDays : 1;
+        }
+
+        // Update day display and progress
+        function updateDayDisplay() {
+            const currentDay = calculateChallengeDay();
+            const progressPercent = ((currentDay / 365) * 100).toFixed(1);
+            
+            document.getElementById('dayDisplay').textContent = `Day ${currentDay}`;
+            document.getElementById('progressText').textContent = `${progressPercent}%`;
+            
+            // Animate progress bar
+            setTimeout(() => {
+                document.getElementById('progressFill').style.width = progressPercent + '%';
+            }, 100);
+        }
+
+        // Show links when Enter is clicked
+        function showLinks() {
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('linksContainer').classList.add('show');
+        }
+
+        // Initialize
+        createParticles();
+        updateDayDisplay();
+    </script>
+</body>
+</html>
