@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BiniFn - 365 Day Challenge</title>
+<style>
+    :root{
+        --accent: #ff0000;
+        --accent-dark: #8b0000;
+        --glow: rgba(255,0,0,0.9);
+        --bg-tint: rgba(0,0,0,0.45);
+        --text: #ffffff;
+    }
+
+    /* Reset */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: radial-gradient(ellipse at top, #1a0000 0%, #000 50%);
+        color:var(--text);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        min-height:100vh;
+        overflow:auto;
+        padding:20px;
+        -webkit-font-smoothing:antialiased;
+        -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* Background canvas fallback & overlay */
+    .background {
+        position: fixed; inset:0; z-index:0; pointer-events:none;
+        background: radial-gradient(ellipse at top, #1a0000 0%, #000 50%);
+    }
+    .bg-overlay {
+        position: absolute; inset:0; z-index:0; pointer-events:none;
+        background: linear-gradient(180deg, rgba(0,0,0,0.0), var(--bg-tint));
+        mix-blend-mode: screen;
+    }
+
+    /* Particles container */
+    .particles { position: fixed; inset:0; z-index:1; pointer-events:none; }
+    .particle {
+        position:absolute;
+        width:3px; height:3px; border-radius:50%;
+        background: var(--accent);
+        box-shadow: 0 0 8px var(--accent);
+        will-change: transform, opacity;
+        animation: float 12s linear infinite;
+        opacity: 0;
+    }
+    @keyframes float {
+        0% { transform: translateY(0) translateX(0); opacity:0; }
+        8% { opacity:0.8; }
+        92% { opacity:0.6; }
+        100% { transform: translateY(-110vh) translateX(80px); opacity:0; }
+    }
+
+    /* Layout */
+    .wrap{ z-index:2; width:100%; max-width:900px; text-align:center; position:relative; margin:0 auto; }
+    .logo{
+        font-size:clamp(2.6rem,9vw,4.8rem);
+        font-weight:900;
+        color:var(--text);
+        letter-spacing:.08em;
+        margin-bottom:6px;
+        text-shadow:
+            0 0 8px var(--accent),
+            0 0 16px var(--accent),
+            0 0 26px var(--accent-dark);
+        transition: text-shadow .45s ease, color .3s ease;
+    }
+    .subtitle{
+        color: #ff6666;
+        font-weight:300;
+        letter-spacing:.28em;
+        text-transform:uppercase;
+        margin-bottom:18px;
+        font-size:clamp(.85rem,2.2vw,1.05rem);
+    }
+
+    .card{
+        background: linear-gradient(135deg, rgba(139,0,0,0.18), rgba(0,0,0,0.55));
+        border-radius:16px;
+        padding:28px;
+        border:2px solid var(--accent);
+        box-shadow: 0 8px 34px rgba(0,0,0,0.6);
+        margin:12px 0;
+        position:relative;
+        overflow:hidden;
+    }
+
+    .day-label{ color: var(--accent); text-transform:uppercase; letter-spacing:.18em; font-size:0.95rem; }
+    .day-display{
+        font-size:clamp(3.2rem,10vw,5.2rem); font-weight:900;
+        color:var(--text);
+        text-shadow: 0 0 18px var(--accent), 0 0 36px var(--accent);
+        margin:8px 0 10px;
+        transition: transform .3s ease, text-shadow .3s ease;
+    }
+
+    .progress-container{ margin-top:10px; }
+    .progress-label{ display:flex; justify-content:space-between; color:var(--accent); font-size:.95rem; }
+    .progress-bar{
+        height:8px; border-radius:8px; background: rgba(255,0,0,0.12);
+        overflow:hidden; border:1px solid rgba(255,0,0,0.12); margin-top:8px;
+    }
+    .progress-fill{
+        height:100%; width:0%;
+        background: linear-gradient(90deg,var(--accent-dark),var(--accent));
+        transition: width .8s ease-out, background .3s ease;
+        box-shadow: 0 0 12px var(--glow);
+        border-radius:8px;
+    }
+
+    .next-button{
+        margin-top:20px; padding:14px 44px; border-radius:999px;
+        background: linear-gradient(135deg,var(--accent-dark),var(--accent));
+        border:2px solid var(--accent);
+        color:#fff; font-weight:800; cursor:pointer;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+        transition: transform .2s ease, box-shadow .2s ease, background .3s ease, border-color .3s ease;
+        text-transform:uppercase; letter-spacing:.08em;
+    }
+    .next-button:hover{ transform:translateY(-3px); box-shadow:0 16px 44px rgba(0,0,0,0.55); }
+
+    .links-container{ display:none; margin-top:16px; }
+    .links-container.show{ display:block; }
+
+    .link-button{
+        display:block; margin:12px auto; padding:12px 40px; border-radius:999px;
+        text-decoration:none; color:#fff; font-weight:700;
+        background: linear-gradient(135deg, rgba(139,0,0,0.36), rgba(0,0,0,0.6));
+        border:2px solid var(--accent);
+        max-width:360px; box-shadow:0 8px 26px rgba(0,0,0,0.45);
+        transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
+    }
+    .link-button:hover{ transform:translateY(-3px); box-shadow:0 18px 40px rgba(0,0,0,0.6); }
+
+    .challenge-badge{
+        display:inline-block; padding:12px 20px; border-radius:12px; margin-top:14px;
+        background: linear-gradient(135deg, rgba(139,0,0,0.22), rgba(0,0,0,0.5));
+        border:1px solid rgba(255,0,0,0.18);
+        color:#fff; font-weight:700;
+    }
+
+    .special-day-badge{
+        display:inline-block; padding:10px 18px; border-radius:14px; margin-bottom:12px;
+        color:#fff; font-weight:900; box-shadow:0 8px 30px rgba(0,0,0,0.4);
+        transition: background .35s ease, box-shadow .35s ease, transform .35s ease;
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce){
+        .background::before, .particle, .day-display, .logo { animation: none !important; transition: none !important; }
+    }
+
+    /* mobile tweaks */
+    @media (max-width:480px){
+        body{ padding:12px; }
+        .card{ padding:18px; border-radius:12px; }
+        .logo{ font-size: clamp(2.0rem, 12vw, 3.6rem); text-shadow: 0 0 8px var(--accent); }
+        .day-display{ font-size: clamp(2.2rem, 11vw, 3.8rem); }
+        .next-button, .link-button{ width:100%; max-width:none; padding:12px 18px; }
+        .progress-fill::after{ display:none; }
+    }
+
+    .sr-only{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+</style>
+</head>
+<body>
+    <div class="background" aria-hidden="true"></div>
+    <div class="bg-overlay" aria-hidden="true"></div>
+    <div class="particles" id="particles" aria-hidden="true"></div>
+
+    <div class="wrap" role="main">
+        <div id="specialBadgeWrap"></div>
+
+        <div class="logo" id="logoTitle">BiniFn</div>
+        <div class="subtitle">Gamer • Creator • Programmer</div>
+
+        <div class="card" role="region" aria-label="Challenge progress">
+            <div class="day-label">Challenge Progress</div>
+            <div class="day-display" id="dayDisplay">Day 1</div>
+
+            <div class="progress-container">
+                <div class="progress-label"><span id="progressText">0%</span><span>365 Days</span></div>
+                <div class="progress-bar"><div class="progress-fill" id="progressFill" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div>
+            </div>
+        </div>
+
+        <button class="next-button" id="nextBtn" onclick="showLinks()" aria-expanded="false">Enter</button>
+
+        <div class="links-container" id="linksContainer" aria-hidden="true">
+            <a href="https://guns.lol/binifn" class="link-button" target="_blank" rel="noopener noreferrer">🌐 Visit Website</a>
+            <a href="https://youtube.com/@binifn.x" class="link-button" target="_blank" rel="noopener noreferrer">📺 YouTube Channel</a>
+        </div>
+
+        <div class="challenge-badge">🎮 365 Day Livestream Challenge <div style="font-size:.85rem; opacity:.9; margin-top:6px">Started: November 7th, 2025</div></div>
+    </div>
+
+<script>
+/* ========== Helpers & Accessibility ========== */
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMobile = window.innerWidth < 768 || window.matchMedia('(max-width:767px)').matches;
+
+/* ========== Easter calculation (Anonymous Gregorian algorithm) ========== */
+function easterDate(year){
+    const a = year % 19;
+    const b = Math.floor(year/100);
+    const c = year % 100;
+    const d = Math.floor(b/4);
+    const e = b % 4;
+    const f = Math.floor((b+8)/25);
+    const g = Math.floor((b-f+1)/3);
+    const h = (19*a + b - d - g + 15) % 30;
+    const i = Math.floor(c/4);
+    const k = c % 4;
+    const L = (32 + 2*e + 2*i - h - k) % 7;
+    const m = Math.floor((a + 11*h + 22*L)/451);
+    const month = Math.floor((h + L - 7*m + 114)/31);
+    const day = ((h + L - 7*m + 114) % 31) + 1;
+    return {month, day};
+}
+
+/* ========== Holiday map () ========== */
+/* Each entry: 'M-D': { emoji, text, primary, secondary, glow, note? } */
+function buildSpecialDaysForYear(year){
+    // start with static entries
+    const map = new Map([
+        ['1-1', {emoji:'🎉', text:'Happy New Year!', primary:'#FFD700', secondary:'#FFA500', glow:'#FFD700'}],
+        ['1-11', {emoji:'🇦🇱', text:'Albanian Republic Day!', primary:'#FF0000', secondary:'#000000', glow:'#FF0000'}],
+
+        ['2-13', {emoji:'🌌', text:"Laylat al-Bara'ah (Night of Forgiveness)", primary:'#7A5CFF', secondary:'#A78BFA', glow:'#7A5CFF'}],
+        ['2-27', {emoji:'✨', text:"Isra and Mi'raj", primary:'#4169E1', secondary:'#9370DB', glow:'#4169E1'}],
+        
+        ['3-1', {emoji:'🌙', text:'Ramadan Begins', primary:'#00CED1', secondary:'#4169E1', glow:'#00CED1'}],
+        ['3-14', {emoji:'🌸', text:'Albanian Summer Day!', primary:'#FFB6C1', secondary:'#FF69B4', glow:'#FFB6C1'}],
+        ['3-17', {emoji:'☘️', text:"St. Patrick's Day", primary:'#00FF00', secondary:'#228B22', glow:'#00FF00'}],
+        ['3-22', {emoji:'🇦🇱', text:'Albanian Nowruz!', primary:'#FFD700', secondary:'#FF6347', glow:'#FFD700'}],
+        ['3-26', {emoji:'🌠', text:'Laylat al-Qadr (Night of Power)', primary:'#7F4FF1', secondary:'#FFB6C1', glow:'#7F4FF1'}],
+        ['3-30', {emoji:'🌙', text:'Eid al-Fitr', primary:'#FFD700', secondary:'#00CED1', glow:'#FFD700'}],
+        ['3-31', {emoji:'🌙', text:'Eid al-Fitr Celebration', primary:'#FFD700', secondary:'#00CED1', glow:'#FFD700'}],
+
+        ['4-1', {emoji:'🤡', text:"April Fools' Day!", primary:'#9370DB', secondary:'#BA55D3', glow:'#9370DB'}],
+        ['5-1', {emoji:'⚒️', text:'International Labour Day!', primary:'#DC143C', secondary:'#FFD700', glow:'#DC143C'}],
+        ['5-5', {emoji:'🌮', text:'Cinco de Mayo!', primary:'#FF6347', secondary:'#FFD700', glow:'#FF6347'}],
+
+        ['6-5', {emoji:'🕋', text:'Day of Arafah', primary:'#2E8B57', secondary:'#FFD700', glow:'#2E8B57'}],
+        ['6-6', {emoji:'🕋', text:'Eid al-Adha', primary:'#228B22', secondary:'#FFD700', glow:'#228B22'}],
+        ['6-7', {emoji:'🕋', text:'Eid al-Adha Celebration', primary:'#228B22', secondary:'#FFD700', glow:'#228B22'}],
+        ['6-8', {emoji:'🕋', text:'Eid al-Adha Celebration', primary:'#228B22', secondary:'#FFD700', glow:'#228B22'}],
+        ['6-16', {emoji:'☪️', text:'Eid al-Ghadir', primary:'#006400', secondary:'#FFD700', glow:'#006400'}],
+        ['6-27', {emoji:'☪️', text:'Islamic New Year', primary:'#9370DB', secondary:'#4169E1', glow:'#9370DB'}],
+
+        ['7-4', {emoji:'🇺🇸', text:'Happy 4th of July!', primary:'#0000FF', secondary:'#FF0000', glow:'#0000FF'}],
+        ['7-7', {emoji:'🕯️', text:'Ashura', primary:'#8B0000', secondary:'#000000', glow:'#8B0000'}],
+
+        ['9-5', {emoji:'🌟', text:"Mawlid al-Nabi (Prophet's Birthday)", primary:'#00CED1', secondary:'#FFD700', glow:'#00CED1'}],
+        ['10-19', {emoji:'🇦🇱', text:'Mother Teresa Day!', primary:'#87CEEB', secondary:'#4169E1', glow:'#87CEEB'}],
+        ['10-31', {emoji:'🎃', text:'Halloween!', primary:'#FF8C00', secondary:'#8B008B', glow:'#FF8C00'}],
+        ['11-28', {emoji:'🇦🇱', text:'Albanian Independence Day!', primary:'#FF0000', secondary:'#000000', glow:'#FF0000'}],
+        ['11-29', {emoji:'🇦🇱', text:'Albanian Liberation Day!', primary:'#FF0000', secondary:'#000000', glow:'#FF0000'}],
+        ['12-24', {emoji:'🎄', text:'Christmas Eve!', primary:'#228B22', secondary:'#DC143C', glow:'#228B22'}],
+        ['12-25', {emoji:'🎅', text:'Merry Christmas!', primary:'#DC143C', secondary:'#228B22', glow:'#DC143C'}],
+        ['12-31', {emoji:'🎊', text:"New Year's Eve!", primary:'#FFD700', secondary:'#FF1493', glow:'#FFD700'}]
+    ]);
+
+    // Add Easter for the year (Easter Sunday + Easter Monday)
+    const e = easterDate(year);
+    map.set(`${e.month}-${e.day}`, { emoji: '🐣', text: `Easter Sunday (${monthName(e.month)} ${e.day}, ${year})`, primary:'#FFD700', secondary:'#FF69B4', glow:'#FFD700' });
+    const em = new Date(year, e.month-1, e.day+1);
+    map.set(`${em.getMonth()+1}-${em.getDate()}`, { emoji:'🌷', text: `Easter Monday (${monthName(em.getMonth()+1)} ${em.getDate()}, ${year})`, primary:'#FFECB3', secondary:'#FFCCBC', glow:'#FFB6C1' });
+
+    return map;
+}
+
+/* helper: month name */
+function monthName(m){ return ['','January','February','March','April','May','June','July','August','September','October','November','December'][m] }
+
+/* ========== Apply theme when holiday matches today ========== */
+function applyThemeForToday(){
+    const today = new Date();
+    const key = `${today.getMonth()+1}-${today.getDate()}`;
+    const year = today.getFullYear();
+    const map = buildSpecialDaysForYear(year);
+    const info = map.get(key) || null;
+    if (!info) return; // no special theme today
+
+    // set CSS variables
+    document.documentElement.style.setProperty('--accent', info.primary);
+    document.documentElement.style.setProperty('--accent-dark', info.secondary);
+    document.documentElement.style.setProperty('--glow', info.glow || info.primary);
+    // tint the bg overlay slightly using the primary color with transparency
+    document.documentElement.style.setProperty('--bg-tint', hexToRgba(info.primary, 0.22));
+
+    // update logo shadow
+    const logo = document.getElementById('logoTitle');
+    logo.style.textShadow = `0 0 10px ${info.glow}, 0 0 20px ${info.glow}, 0 0 30px ${info.secondary}`;
+
+    // badge
+    const wrap = document.getElementById('specialBadgeWrap');
+    wrap.innerHTML = '';
+    const badge = document.createElement('div');
+    badge.className = 'special-day-badge';
+    badge.style.background = `linear-gradient(135deg, ${info.primary}, ${info.secondary})`;
+    badge.style.boxShadow = `0 10px 40px ${hexToRgba(info.glow, 0.25)}`;
+    badge.textContent = `${info.emoji}  ${info.text}`;
+    wrap.appendChild(badge);
+
+    // update progress fill colors & glow
+    const pf = document.getElementById('progressFill');
+    pf.style.background = `linear-gradient(90deg, ${info.secondary}, ${info.primary})`;
+    pf.style.boxShadow = `0 0 12px ${hexToRgba(info.glow, 0.55)}`;
+
+    // update card border color
+    const card = document.querySelector('.card');
+    card.style.borderColor = info.primary;
+    card.style.boxShadow = `0 8px 34px ${hexToRgba(info.glow, 0.12)}`;
+
+    // update buttons
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.style.background = `linear-gradient(135deg, ${info.secondary}, ${info.primary})`;
+    nextBtn.style.borderColor = info.primary;
+
+    document.querySelectorAll('.link-button').forEach(el => {
+        el.style.borderColor = info.primary;
+    });
+
+    // recolor particles by updating CSS variable (particles are inline-styled to use var)
+    recolorParticles(info.primary, info.glow);
+}
+
+/* ========== Utility: hex to rgba (approx) ========== */
+function hexToRgba(hex, alpha=1){
+    // remove #
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(h => h+h).join('');
+    const r = parseInt(hex.substr(0,2),16), g = parseInt(hex.substr(2,2),16), b = parseInt(hex.substr(4,2),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/* ========== Particles (DOM-based) ========== */
+function createParticles(){
+    const container = document.getElementById('particles');
+    container.innerHTML = '';
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const baseCount = isMobile ? 16 : 30;
+    const count = prefersReducedMotion ? Math.round(baseCount * 0.35) : baseCount;
+
+    for (let i=0;i<count;i++){
+        const el = document.createElement('div');
+        el.className = 'particle';
+        // initial position near bottom or random
+        el.style.left = Math.random()*100 + '%';
+        el.style.top = (75 + Math.random()*25) + '%';
+        el.style.animationDelay = (Math.random()*12) + 's';
+        el.style.animationDuration = (10 + Math.random()*10) + 's';
+        // random tiny horizontal transform so each path differs
+        el.style.transform = `translateX(${(Math.random()-0.5)*80}px)`;
+        // color uses computed CSS var --accent; fallback set inline
+        el.style.background = getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff0000';
+        el.style.boxShadow = `0 0 8px ${getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff0000'}`;
+        container.appendChild(el);
+    }
+}
+
+/* recolor existing particles when theme applied */
+function recolorParticles(color, glowColor){
+    document.querySelectorAll('.particle').forEach(el=>{
+        el.style.background = color;
+        el.style.boxShadow = `0 0 8px ${glowColor || color}`;
+    });
+}
+
+/* ========== Challenge day logic ========== */
+function calculateChallengeDay(){
+    const startDate = new Date('2025-11-07T00:00:00');
+    const today = new Date();
+    startDate.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
+    const diff = Math.floor((today - startDate)/(1000*60*60*24));
+    return diff >= 0 ? diff + 1 : 1;
+}
+
+function updateDayDisplay(){
+    const day = calculateChallengeDay();
+    const percent = ((day/365)*100);
+    document.getElementById('dayDisplay').textContent = `Day ${day}`;
+    document.getElementById('progressText').textContent = `${percent.toFixed(1)}%`;
+    const pf = document.getElementById('progressFill');
+    setTimeout(()=>{ pf.style.width = percent + '%'; pf.setAttribute('aria-valuenow', Math.round(percent)); }, 80);
+}
+
+/* ========== Show links ========== */
+function showLinks(){
+    document.getElementById('nextBtn').style.display = 'none';
+    const links = document.getElementById('linksContainer');
+    links.classList.add('show');
+    links.setAttribute('aria-hidden','false');
+    document.getElementById('nextBtn').setAttribute('aria-expanded','true');
+}
+
+/* ========== Init ========== */
+createParticles();
+updateDayDisplay();
+applyThemeForToday();
+
+/* refresh at midnight */
+(function scheduleMidnightUpdate(){
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1, 0,0,8);
+    setTimeout(()=>{
+        updateDayDisplay();
+        // reapply theme (in case holiday changed)
+        document.getElementById('specialBadgeWrap').innerHTML = '';
+        applyThemeForToday();
+        scheduleMidnightUpdate();
+    }, next - now);
+})();
+
+/* recreate particles on resize for correct counts */
+let resizeTimer;
+window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer = setTimeout(()=>{ createParticles(); applyThemeForToday(); }, 200); }, {passive:true});
+
+/* keyboard accessibility for Enter button */
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && document.activeElement === document.getElementById('nextBtn')) showLinks(); });
+
+</script>
+</body>
+</html>
