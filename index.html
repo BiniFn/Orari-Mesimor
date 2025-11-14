@@ -5,22 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>BiniFn — 365 Day Livestream Challenge</title>
 <style>
-/* =========================================================================
-   BiniFn — Single-file full version
-   - Big, explicit, and commented.
-   - UI fully centered and responsive.
-   - Holidays, Codex overlay, LEGO rain, confetti, finale, THE END.
-   - No upload; no visible Easter-egg instructions.
-   ========================================================================= */
-
-/* ----- Theme variables ----- */
-:root{
+:root {
   --accent: #ff0000;
   --accent-dark: #8b0000;
   --glow: rgba(255,0,0,0.9);
   --bg-tint: rgba(0,0,0,0.45);
   --text: #ffffff;
-
   --max-width: 1200px;
   --ui-padding: 20px;
   --card-radius: 16px;
@@ -29,206 +19,519 @@
   --transition-smooth: 360ms;
 }
 
-/* ----- Global reset ----- */
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; }
+html { height: auto; }
+body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: radial-gradient(ellipse at top, #0b0000 0%, #000 66%);
-  color:var(--text);
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  min-height:100vh;
-  margin:0;
-  padding:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:auto;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* let the body size naturally so mobile browsers can adjust viewport height
+    and avoid clipping when the browser chrome (address bar/keyboard) toggles */
+  min-height: auto;
+  display: flex;
+  /* allow the page to scroll vertically but never horizontally; align content to the top so
+    nothing gets clipped on mobile when browser chrome or keyboard changes viewport height */
+  align-items: flex-start;
+  justify-content: center;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* add a little horizontal padding for mobile safe area and reserve safe-area inset on top */
+  padding: calc(20px + env(safe-area-inset-top, 0px)) 12px 20px;
 }
 
-/* ----- App outer wrapper (keeps everything centered) ----- */
 .app {
-  width:100%;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:var(--ui-padding);
-  position:relative;
-  z-index:0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  z-index: 0;
+  /* allow the app container to grow naturally and not force a fixed viewport height
+     which caused content to be clipped on some devices */
+  min-height: 0;
+  max-width: 100%;
 }
 
-/* ----- Background layers ----- */
+/* Prevent any element from causing horizontal scroll on small screens */
+img, svg, canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ensure containers never exceed viewport width due to box-shadow or borders */
+.container, .card, .codex-card {
+  max-width: 100%;
+}
+
 .background {
-  position:fixed; inset:0; z-index:0; pointer-events:none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
   background: radial-gradient(ellipse at top, rgba(10,0,0,0.95) 0%, #000 70%);
 }
+
 .bg-overlay {
-  position:fixed; inset:0; z-index:0; pointer-events:none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
   background: linear-gradient(180deg, rgba(0,0,0,0.0), var(--bg-tint));
   mix-blend-mode: screen;
 }
 
-/* ----- Particle container (subtle floating dots) ----- */
-.particles { position:fixed; inset:0; z-index:1; pointer-events:none; }
-.particle { position:absolute; width:3px; height:3px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); opacity:0; animation: float 12s linear infinite; will-change: transform, opacity; }
-@keyframes float { 0%{ transform: translateY(0) translateX(0); opacity:0 } 8%{ opacity:.8 } 92%{ opacity:.6 } 100%{ transform: translateY(-110vh) translateX(80px); opacity:0 } }
+.particles { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+.particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  opacity: 0;
+  animation: float 12s linear infinite;
+  will-change: transform, opacity;
+}
 
-/* ----- Main container colors & layout ----- */
+@keyframes float {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  8% { opacity: 0.8; }
+  92% { opacity: 0.6; }
+  100% { transform: translateY(-110vh) translateX(80px); opacity: 0; }
+}
+
 .container {
-  z-index:2;
-  width:100%;
-  max-width:var(--max-width);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:28px;
-  padding:28px;
-  box-sizing:border-box;
-  flex-direction:column;
+  z-index: 2;
+  width: 100%;
+  max-width: 95%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 15px;
+  box-sizing: border-box;
+  flex-direction: column;
+  margin: 0 auto;
 }
 
-/* ----- Header ----- */
-.header{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:8px;
-  width:100%;
+/* Audio toggle styles */
+#audioToggle {
+  /* button is positioned by its container (#audioControls) to avoid overlap */
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(0,0,0,0.12));
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+  font-size: 18px;
+  cursor: pointer;
 }
+#audioToggle[aria-pressed="true"]{ background: linear-gradient(135deg, var(--accent-dark), var(--accent)); box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
+
+@media (max-width:480px){
+  #audioToggle{ right: 8px; top: calc(8px + env(safe-area-inset-top, 0px)); width:40px; height:40px; }
+}
+
+#audioControls { position: fixed; right: 12px; top: 12px; display: flex; gap:10px; align-items:center; z-index:14000; /* place slider to the left of the button so it expands left */ flex-direction: row-reverse; }
+#audioControls input[type="range"]{ width:120px; appearance:none; height:6px; background: rgba(255,255,255,0.08); border-radius:999px; }
+#audioControls input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); box-shadow:0 4px 12px rgba(0,0,0,0.4); }
+#audioControls input[type="range"]::-moz-range-thumb{ width:16px; height:16px; border-radius:50%; background:var(--accent); }
+
+@media (max-width:480px){
+  #audioControls input[type="range"]{ width:88px; }
+}
+
+/* volume hidden by default; revealed when user presses the toggle
+  keep the input in the flow but collapsed so transitions are smooth */
+#audioControls input[type="range"]{ display:block; opacity:0; width:0; transition: width .18s ease, opacity .18s ease, margin .18s ease; pointer-events: none; }
+#audioControls.show-volume input[type="range"]{ opacity:1; width:120px; margin-right:8px; pointer-events: auto; }
+@media (max-width:480px){ #audioControls.show-volume input[type="range"]{ width:88px; } }
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
 .logo {
-  font-weight:900;
-  font-size:clamp(2.2rem,8vw,4.6rem);
-  letter-spacing:0.06em;
-  color:var(--text);
+  font-weight: 900;
+  font-size: clamp(1.8rem, 6vw, 3.5rem);
+  letter-spacing: 0.06em;
+  color: var(--text);
   text-shadow: 0 0 8px var(--accent), 0 0 18px var(--accent), 0 0 26px var(--accent-dark);
-  cursor:default;
-  user-select:none;
-}
-.subtitle {
-  color:#ff6666;
-  text-transform:uppercase;
-  font-weight:300;
-  letter-spacing:0.22em;
-  font-size:clamp(.8rem,2vw,1rem);
+  cursor: default;
+  user-select: none;
+  white-space: nowrap;
+  overflow: visible;
 }
 
-/* ----- Card with Day display ----- */
-.card {
-  width:min(720px, 96%);
-  max-width:720px;
-  border-radius:var(--card-radius);
-  padding:24px;
-  background: linear-gradient(135deg, rgba(139,0,0,0.18), rgba(0,0,0,0.55));
-  border:2px solid var(--accent);
-  box-shadow: 0 8px 34px rgba(0,0,0,0.6);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:12px;
+.subtitle {
+  color: #ff6666;
+  text-transform: uppercase;
+  font-weight: 300;
+  letter-spacing: 0.22em;
+  font-size: clamp(0.8rem, 2vw, 1rem);
 }
-.day-label { color:var(--accent); text-transform:uppercase; letter-spacing:.14em; font-weight:700; }
+
+.card {
+  width: min(720px, 96%);
+  max-width: 720px;
+  border-radius: var(--card-radius);
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(139,0,0,0.18), rgba(0,0,0,0.55));
+  border: 2px solid var(--accent);
+  box-shadow: 0 8px 34px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.day-label { 
+  color: var(--accent); 
+  text-transform: uppercase; 
+  letter-spacing: 0.14em; 
+  font-weight: 700; 
+}
+
 .day-display {
-  font-size:clamp(2.6rem,9vw,4.6rem);
-  font-weight:900;
-  color:var(--text);
+  font-size: clamp(2.6rem, 9vw, 4.6rem);
+  font-weight: 900;
+  color: var(--text);
   text-shadow: 0 0 18px var(--accent), 0 0 36px var(--accent);
   transition: transform var(--transition-fast) ease, text-shadow var(--transition-fast) ease;
 }
 
-/* ----- Progress bar ----- */
-.progress-container { width:100%; margin-top:6px; }
-.progress-label { display:flex; justify-content:space-between; width:100%; color:var(--accent); font-weight:700; font-size:.95rem; }
-.progress-bar { margin-top:8px; height:12px; width:100%; background: rgba(255,0,0,0.08); border-radius:999px; overflow:hidden; border:1px solid rgba(255,0,0,0.08); }
-.progress-fill { height:100%; width:0; background: linear-gradient(90deg,var(--accent-dark),var(--accent)); box-shadow: 0 0 12px var(--glow); transition: width .9s cubic-bezier(.1,.9,.2,1); border-radius:999px; }
+.progress-container { width: 100%; margin-top: 6px; }
+.progress-label { 
+  display: flex; 
+  justify-content: space-between; 
+  width: 100%; 
+  color: var(--accent); 
+  font-weight: 700; 
+  font-size: 0.95rem; 
+}
 
-/* ----- Enter button ----- */
-.controls { width:100%; display:flex; align-items:center; justify-content:center; margin-top:16px; gap:12px; }
+.progress-bar { 
+  margin-top: 8px; 
+  height: 12px; 
+  width: 100%; 
+  background: rgba(255,0,0,0.08); 
+  border-radius: 999px; 
+  overflow: hidden; 
+  border: 1px solid rgba(255,0,0,0.08); 
+}
+
+.progress-fill { 
+  height: 100%; 
+  width: 0; 
+  background: linear-gradient(90deg, var(--accent-dark), var(--accent)); 
+  box-shadow: 0 0 12px var(--glow); 
+  transition: width 0.9s cubic-bezier(0.1,0.9,0.2,1); 
+  border-radius: 999px; 
+}
+
+.controls { width: 100%; display: flex; align-items: center; justify-content: center; margin-top: 16px; gap: 12px; }
 .next-button {
-  padding:14px 44px;
-  border-radius:999px;
-  background: linear-gradient(135deg,var(--accent-dark),var(--accent));
-  border:2px solid var(--accent);
-  color:#fff; font-weight:900; letter-spacing:.08em;
-  cursor:pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  padding: 14px 44px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+  border: 2px solid var(--accent);
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
-.next-button:hover { transform:translateY(-3px); box-shadow: 0 16px 40px rgba(0,0,0,0.55); }
 
-/* ----- Hidden content area (revealed on Enter) ----- */
+.next-button:hover { 
+  transform: translateY(-3px); 
+  box-shadow: 0 16px 40px rgba(0,0,0,0.55); 
+}
+
 #mainContent {
-  width:100%;
-  max-width:800px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:12px;
-  margin-top:10px;
-  opacity:0;
-  pointer-events:none;
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  opacity: 0;
+  pointer-events: none;
   transform: translateY(8px);
-  transition: opacity .7s ease, transform .7s ease;
+  transition: opacity 0.7s ease, transform 0.7s ease;
 }
+
 #mainContent.show {
-  opacity:1; pointer-events:auto; transform:translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
-/* ----- Links and playlist ----- */
-.links { display:flex; flex-direction:column; align-items:center; gap:12px; width:100%; }
+.links { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
 .link-button {
-  width:min(420px, 92%);
-  text-decoration:none;
-  color:white;
+  width: min(420px, 92%);
+  text-decoration: none;
+  color: white;
   background: linear-gradient(135deg, rgba(139,0,0,0.32), rgba(0,0,0,0.36));
-  border:2px solid var(--accent);
-  padding:12px 18px; border-radius:999px; font-weight:800; text-align:center;
-  box-shadow:0 8px 26px rgba(0,0,0,0.45);
+  border: 2px solid var(--accent);
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 8px 26px rgba(0,0,0,0.45);
 }
 
-/* ----- Challenge badge ----- */
-.challenge-badge { margin-top:8px; padding:10px 16px; border-radius:12px; background: linear-gradient(135deg, rgba(139,0,0,0.22), rgba(0,0,0,0.5)); color:#fff; font-weight:800; border:1px solid rgba(255,0,0,0.18); }
-
-/* ----- Playlist link styling ----- */
-.playlist-btn { display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; text-decoration:none; color:white; font-weight:900; background: linear-gradient(90deg,#FF0000,#ff4b4b); border:2px solid rgba(255,255,255,0.06); box-shadow:0 10px 30px rgba(0,0,0,0.45); }
-
-/* ----- Codex overlay ----- */
-.overlay { position:fixed; inset:0; z-index:9999; display:none; align-items:center; justify-content:center; background: rgba(0,0,0,0.78); backdrop-filter: blur(6px); }
-.overlay.show { display:flex; }
-.codex-card { width:min(1180px, 96%); max-width:1180px; background: linear-gradient(135deg, rgba(20,20,20,0.96), rgba(10,10,10,0.94)); border-radius:14px; padding:28px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); position:relative; overflow:hidden; }
-.codex-heading { font-size:clamp(1.6rem,3.6vw,3rem); font-weight:900; color:#fff; margin-bottom:12px; text-align:center; }
-.codex-logo { display:block; margin:0 auto 12px; max-width:760px; width:86%; height:auto; filter: drop-shadow(0 12px 40px rgba(0,0,0,0.6)); }
-.logo-rain { position:absolute; inset:0; pointer-events:none; z-index:2; }
-
-/* Close button on codex */
-.codex-close { position:absolute; top:16px; right:16px; z-index:10; background:#111; color:#fff; border:1px solid rgba(255,255,255,0.06); padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:800; }
-
-/* ----- Finale overlay (Day >= 365) ----- */
-.finale-overlay { position:fixed; inset:0; z-index:12000; display:none; align-items:center; justify-content:center; background: rgba(0,0,0,0.88); backdrop-filter: blur(6px); }
-.finale-overlay.show { display:flex; }
-.finale-logo { font-weight:900; color:#FFD700; text-shadow: 0 0 32px rgba(255,215,0,0.9), 0 0 80px rgba(255,215,0,0.25); font-size:clamp(3.2rem,10vw,7.2rem); margin-bottom:12px; text-align:center; }
-.finale-banner { padding:12px 20px; border-radius:12px; background:linear-gradient(90deg, rgba(255,215,0,0.04), rgba(255,240,180,0.02)); color:#fff; font-weight:900; text-align:center; }
-
-/* ----- THE END overlay (Day >= 400) ----- */
-.the-end-overlay { position:fixed; inset:0; z-index:13000; display:none; align-items:center; justify-content:center; background: rgba(0,0,0,0.98); color:white; padding:24px; text-align:center; }
-.the-end-overlay.show { display:flex; }
-
-/* ----- Confetti pieces (DOM-based) ----- */
-.confetti-piece { position:fixed; z-index:13100; width:10px; height:14px; border-radius:2px; will-change: transform, opacity; }
-
-/* ----- Invisible corner hotspot ----- */
-.corner-hotspot { position:fixed; right:6px; bottom:6px; width:56px; height:56px; z-index:999; opacity:0; }
-
-/* ----- Responsive tweaks ----- */
-@media (max-width:880px){
-  .card { padding:18px; }
-  .next-button { padding:12px 28px; font-size:0.95rem; }
-  .logo { font-size: clamp(1.8rem,12vw,3.6rem); }
+.challenge-badge { 
+  margin-top: 8px; 
+  padding: 10px 16px; 
+  border-radius: 12px; 
+  background: linear-gradient(135deg, rgba(139,0,0,0.22), rgba(0,0,0,0.5)); 
+  color: #fff; 
+  font-weight: 800; 
+  border: 1px solid rgba(255,0,0,0.18); 
 }
 
-/* Reduced motion -- respect user preference */
-@media (prefers-reduced-motion: reduce){
-  .particle, .logo-rain, .overlay, .finale-overlay, .day-display { animation:none!important; transition:none!important; }
+.playlist-btn { 
+  display: inline-flex; 
+  align-items: center; 
+  gap: 8px; 
+  padding: 10px 14px; 
+  border-radius: 12px; 
+  text-decoration: none; 
+  color: white; 
+  font-weight: 900; 
+  background: linear-gradient(90deg, #FF0000, #ff4b4b); 
+  border: 2px solid rgba(255,255,255,0.06); 
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45); 
+}
+
+.overlay { 
+  position: fixed; 
+  inset: 0; 
+  z-index: 9999; 
+  display: none; 
+  align-items: center; 
+  justify-content: center; 
+  background: rgba(0,0,0,0.78); 
+  backdrop-filter: blur(6px); 
+}
+
+.overlay.show { display: flex; }
+
+.codex-card { 
+  width: min(1180px, 96%); 
+  max-width: 1180px; 
+  background: linear-gradient(135deg, rgba(20,20,20,0.96), rgba(10,10,10,0.94)); 
+  border-radius: 14px; 
+  padding: 28px; 
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6); 
+  position: relative; 
+  overflow: hidden; 
+}
+
+.codex-heading { 
+  font-size: clamp(1.6rem, 3.6vw, 3rem); 
+  font-weight: 900; 
+  color: #fff; 
+  margin-bottom: 12px; 
+  text-align: center; 
+}
+
+.codex-logo { 
+  display: block; 
+  margin: 0 auto 12px; 
+  max-width: 760px; 
+  width: 86%; 
+  height: auto; 
+  filter: drop-shadow(0 12px 40px rgba(0,0,0,0.6)); 
+}
+
+.logo-rain { 
+  position: absolute; 
+  inset: 0; 
+  pointer-events: none; 
+  z-index: 2; 
+}
+
+.codex-close { 
+  position: absolute; 
+  top: 16px; 
+  right: 16px; 
+  z-index: 10; 
+  background: #111; 
+  color: #fff; 
+  border: 1px solid rgba(255,255,255,0.06); 
+  padding: 10px 12px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-weight: 800; 
+}
+
+.finale-overlay { 
+  position: fixed; 
+  inset: 0; 
+  z-index: 12000; 
+  display: none; 
+  align-items: center; 
+  justify-content: center; 
+  background: rgba(0,0,0,0.88); 
+  backdrop-filter: blur(6px); 
+}
+
+.finale-overlay.show { display: flex; }
+
+.finale-logo { 
+  font-weight: 900; 
+  color: #FFD700; 
+  text-shadow: 0 0 32px rgba(255,215,0,0.9), 0 0 80px rgba(255,215,0,0.25); 
+  font-size: clamp(3.2rem, 10vw, 7.2rem); 
+  margin-bottom: 12px; 
+  text-align: center; 
+}
+
+.finale-banner { 
+  padding: 12px 20px; 
+  border-radius: 12px; 
+  background: linear-gradient(90deg, rgba(255,215,0,0.04), rgba(255,240,180,0.02)); 
+  color: #fff; 
+  font-weight: 900; 
+  text-align: center; 
+}
+
+.the-end-overlay { 
+  position: fixed; 
+  inset: 0; 
+  z-index: 13000; 
+  display: none; 
+  align-items: center; 
+  justify-content: center; 
+  background: rgba(0,0,0,0.98); 
+  color: white; 
+  padding: 24px; 
+  text-align: center; 
+}
+
+.the-end-overlay.show { display: flex; }
+
+.confetti-piece { 
+  position: fixed; 
+  z-index: 13100; 
+  width: 10px; 
+  height: 14px; 
+  border-radius: 2px; 
+  will-change: transform, opacity; 
+}
+
+.corner-hotspot { 
+  position: fixed; 
+  right: 6px; 
+  bottom: 6px; 
+  width: 56px; 
+  height: 56px; 
+  z-index: 999; 
+  opacity: 0; 
+}
+
+@media (max-width: 880px) {
+  :root {
+    --ui-padding: 12px;
+  }
+  .card { 
+    padding: 24px;
+    width: min(90vw, 100%);
+  }
+  .next-button { 
+    padding: 16px 36px; 
+    font-size: 1.1rem; 
+  }
+  .logo { 
+    font-size: clamp(2rem, 12vw, 3.2rem); 
+  }
+  .container {
+    gap: 20px;
+    padding: 20px;
+  }
+  #mainContent {
+    max-width: 90vw;
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --ui-padding: 10px;
+  }
+  .card {
+    padding: 22px;
+    width: min(92vw, 100%);
+  }
+  .logo {
+    font-size: clamp(1.8rem, 9vw, 2.8rem);
+  }
+  .subtitle {
+    font-size: clamp(0.85rem, 2vw, 1rem);
+  }
+  .day-display {
+    font-size: clamp(2.4rem, 10vw, 4rem);
+  }
+  .day-label {
+    font-size: 1.1rem;
+  }
+  .container {
+    gap: 16px;
+    padding: 14px;
+  }
+  .next-button {
+    padding: 14px 32px;
+    font-size: 1rem;
+  }
+  #mainContent {
+    max-width: 92vw;
+  }
+  .link-button {
+    width: min(90vw, 100%);
+    padding: 14px 16px;
+    font-size: 0.95rem;
+  }
+  .challenge-badge {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Center the app vertically on larger screens, but keep top-aligned behavior on small devices
+   to avoid clipping when mobile browser chrome or the on-screen keyboard changes viewport height. */
+@media (min-width: 880px) {
+  body {
+    align-items: center;
+    /* restore a little vertical breathing room on desktop */
+    padding: 28px 0;
+  }
+  .app {
+    /* ensure the app fills most of viewport height while still allowing natural flow */
+    min-height: calc(100vh - 56px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particle, .logo-rain, .overlay, .finale-overlay, .day-display { 
+    animation: none!important; 
+    transition: none!important; 
+  }
 }
 </style>
 </head>
@@ -237,6 +540,13 @@ body{
   <div class="background" aria-hidden="true"></div>
   <div class="bg-overlay" aria-hidden="true"></div>
   <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <!-- Background audio: place your MP3 at ../Assets/song.mp3 or update the src -->
+  <audio id="bgAudio" src="../Assets/song.mp3" loop preload="auto"></audio>
+  <div id="audioControls" aria-hidden="false">
+    <button id="audioToggle" aria-pressed="false" aria-label="Play background music">🔈</button>
+    <input id="audioVolume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Background music volume" />
+  </div>
 
   <!-- Main app -->
   <div class="app" role="application" aria-label="BiniFn challenge app">
@@ -271,7 +581,7 @@ body{
         </div>
 
         <div class="challenge-badge" aria-hidden="false">🎮 365 Day Livestream Challenge
-          <div style="font-size:.85rem; opacity:.95; margin-top:6px; font-weight:700">Started: November 7th, 2025</div>
+          <div style="font-size:.85rem; opacity:.95; margin-top:6px; font-weight:700">November 6th, 2025</div>
         </div>
 
         <a id="playlistButton" class="playlist-btn" href="https://youtube.com/playlist?list=PLuHsYM1bT176r4owlQ0SIAcGy_NweH8Xm" target="_blank" rel="noopener noreferrer" style="margin-top:12px;">
@@ -470,12 +780,12 @@ function recolorParticles(color, glow) {
 
 /* ---------- Challenge day calculation ---------- */
 function calculateChallengeDay(){
-  // Start date anchored to Nov 7, 2025 (local midnight)
-  const startDate = new Date('2025-11-07T00:00:00');
+  // Start date anchored to Nov 8, 2025 (local midnight)
+  const startDate = new Date('2025-11-08T00:00:00');
   const today = new Date();
   startDate.setHours(0,0,0,0); today.setHours(0,0,0,0);
   const diff = Math.floor((today - startDate) / (1000*60*60*24));
-  return diff >= 0 ? diff + 1 : 1;
+  return diff >= 0 ? diff : 0;
 }
 function updateDayDisplay(){
   const day = calculateChallengeDay();
@@ -1019,6 +1329,102 @@ window.activateMatrix = function(){ console.warn('Matrix debug available via act
 */
 
 /* End of big JS */
+</script>
+<!-- Audio playback wiring: starts on user gesture (Enter button) and provides a toggle -->
+<script>
+(function(){
+  const audio = document.getElementById('bgAudio');
+  const toggle = document.getElementById('audioToggle');
+  const vol = document.getElementById('audioVolume');
+  const nextBtn = document.getElementById('nextBtn');
+
+  if(!audio || !toggle) return;
+
+  // restore saved preference (optional)
+  const saved = localStorage.getItem('bgAudioPlaying') === '1';
+  const savedVol = parseFloat(localStorage.getItem('bgAudioVolume'));
+  if(!isNaN(savedVol) && vol){
+    vol.value = String(savedVol);
+    audio.volume = savedVol;
+  } else if(vol){
+    // set default volume on first load
+    audio.volume = parseFloat(vol.value || 0.8);
+  }
+  if(saved){
+    audio.play().then(()=>{ toggle.textContent = '🔊'; toggle.setAttribute('aria-pressed','true'); }).catch(()=>{});
+  }
+
+  // start playback on the Enter button (user gesture)
+  if(nextBtn){
+    nextBtn.addEventListener('click', ()=> {
+      audio.play().catch(()=>{});
+    });
+  }
+
+  // play on any first interaction (tap/click) for mobile users
+  function tryPlayOnFirstInteraction(){
+    function handler(){
+      audio.play().catch(()=>{});
+      // remove listeners after first attempt
+      window.removeEventListener('touchstart', handler, {passive:true});
+      window.removeEventListener('click', handler);
+    }
+    window.addEventListener('touchstart', handler, {passive:true});
+    window.addEventListener('click', handler);
+  }
+  tryPlayOnFirstInteraction();
+
+  // volume slider handling
+  if(vol){
+    // ensure correct range display
+    vol.addEventListener('input', (e)=>{
+      const v = parseFloat(e.target.value);
+      audio.volume = isNaN(v) ? 0.8 : v;
+      localStorage.setItem('bgAudioVolume', String(audio.volume));
+      // if user drags to zero, show muted icon
+      if(audio.volume === 0){ toggle.textContent = '🔇'; }
+      else if(!audio.paused) { toggle.textContent = '🔊'; }
+      else { toggle.textContent = '🔈'; }
+    });
+  }
+
+  // show/hide volume slider when user interacts with the toggle
+  const controls = document.getElementById('audioControls');
+  let volumeHideTimer = null;
+  function showVolumeTemporary(ms = 3500){
+    if(!controls) return;
+    controls.classList.add('show-volume');
+    if(volumeHideTimer) clearTimeout(volumeHideTimer);
+    volumeHideTimer = setTimeout(()=>{ controls.classList.remove('show-volume'); volumeHideTimer = null; }, ms);
+  }
+
+  // toggle button
+  toggle.addEventListener('click', async ()=>{
+    // reveal slider immediately when button pressed
+    showVolumeTemporary();
+    try{
+      if(audio.paused){
+        await audio.play();
+        toggle.textContent = '🔊';
+        toggle.setAttribute('aria-pressed','true');
+        localStorage.setItem('bgAudioPlaying','1');
+      } else {
+        audio.pause();
+        toggle.textContent = '🔈';
+        toggle.setAttribute('aria-pressed','false');
+        localStorage.setItem('bgAudioPlaying','0');
+      }
+    }catch(e){
+      console.log('Audio playback blocked or failed', e);
+    }
+  });
+
+  // keep slider visible while user is dragging it
+  if(vol){
+    vol.addEventListener('pointerdown', ()=>{ if(volumeHideTimer) clearTimeout(volumeHideTimer); controls.classList.add('show-volume'); });
+    vol.addEventListener('pointerup', ()=>{ showVolumeTemporary(3000); });
+  }
+})();
 </script>
 </body>
 </html>
